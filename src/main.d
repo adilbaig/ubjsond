@@ -10,10 +10,15 @@ void main(string[] args)
     Element ar = encode("مرحبا");
     Element ls = encode(longstring);
         
-    writeln(bytes(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
-    writeln(fromUBJSON(toUBJSON(true, false, null)));
+    writeln(toUBJSON(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
+    writeln(toElements(toUBJSON(true, false, null)));
     
     writeln(ls, ar);
-    writeln(fromUBJSON(toUBJSON("مرحبا", longstring, true, "Adil")));
+    writeln(toElements(toUBJSON("مرحبا", longstring, true, "Adil")));
     
+    auto e = Element(Type.ArraySmall, 3, toUBJSON("Adil", 29, 29.786));
+    writeln(e);
+    
+    e = Element(Type.ObjectSmall, 2, toUBJSON("User", "Adil123", "Vitals") ~ e.bytes());
+    writeln(e);
 }
