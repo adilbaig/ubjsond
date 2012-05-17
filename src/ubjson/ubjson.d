@@ -16,8 +16,8 @@ enum Type : char {
     Int64 = 'L',
     Float = 'd',
     Double = 'D',
-    HugeSmall = 'h', //Not supported
-    HugeLarge = 'H', //Not supported
+//    HugeSmall = 'h', //Not supported
+//    HugeLarge = 'H', //Not supported
     StringSmall = 's',
     StringLarge = 'S',
     ObjectSmall = 'o',
@@ -28,8 +28,19 @@ enum Type : char {
 
 struct Element {
     Type type;
-    uint length; //For value types it means the byte length. For container types it is the no. of items 
-    immutable(ubyte)[] data; //If you store data manually, you are responsible for bigEndianning it
+    
+    /**
+     * For value types it means the byte length. 
+     * For arrays it means the no. of elements in the array.
+     * For objects it means the number of key-value pairs.
+    */
+    uint length;  
+    
+    union {
+        immutable(ubyte)[] data; //If this data if filled manually, you are responsible for bigEndianning it
+        Element[] array;
+        Element[string] object;
+    }
     
     @property string toString()
     {
@@ -68,20 +79,11 @@ struct Element {
                 
             case Type.ArraySmall:
             case Type.ArrayLarge:
-                return to!string(toElements(data));
+                return to!string(array);
                 
             case Type.ObjectSmall:    
             case Type.ObjectLarge:
-                auto elements = toElements(data);
-                return "Object(" ~ to!string(length) ~ ")(" ~ to!string(elements.length) ~ ")";
-                
-//                string str = "{ ";
-//                for(uint i = 0 ; i < length*2; i += 2)
-//                {
-//                    str ~= elements[i].toString() ~ ":" ~ elements[i + 1].toString(); 
-//                }
-//                    
-//                return str ~ " }";
+                return "Object(" ~ to!string(length) ~ ")";                
         }
         
         return "ERROR!";
@@ -92,220 +94,290 @@ struct Element {
         immutable(ubyte)[] t;
         t ~= type;
         
-        if(data.length > 0)
-        {
-            if (length > 0)
-                if(length < ubyte.max)
-                {
-                    ubyte[1] l = nativeToBigEndian(cast(ubyte)length);
-                    t ~= l[0];
-                }
-                else
-                    t ~= nativeToBigEndian(length).idup;
-            
+        if (length > 0)
+            if(length < ubyte.max)
+            {
+                ubyte[1] l = nativeToBigEndian(cast(ubyte)length);
+                t ~= l[0];
+            }
+            else
+                t ~= nativeToBigEndian(length).idup;
+
+        if(type == Type.ArraySmall || type == Type.ArrayLarge)
+            foreach(a; array)
+                t ~= a.bytes();
+        else if(type == Type.ObjectSmall || type == Type.ObjectLarge)
+            foreach(k, a; object)
+            {
+                t ~= encode(k); //key is a string
+                t ~= a.bytes();
+            }
+        else if(data.length > 0)
             t ~= data;
-        }
         
         return t;
     }
 }
 
-Element encode(long value)
-{
-    Element e = Element();
-    
-    if (value <= byte.max && value >= byte.min)
-    {
-        e.type = Type.Byte;
-        e.data ~= cast(immutable(byte))value;
-    }
-    else if(value <= short.max && value >= short.min)
-    {
-        e.type = Type.Int16;
-        e.data = nativeToBigEndian(cast(short)value).idup;
-    }
-    else if(value <= int.max && value >= int.min)
-    {
-        e.type = Type.Int32;
-        e.data = nativeToBigEndian(cast(int)value).idup;
-    }
-    else
-    {
-        e.type = Type.Int64;
-        e.data = nativeToBigEndian(value).idup;
-    }
-    
-    return e;
-}
-
-Element encode(double value)
-{
-    Element e = Element();
-    
-    if(value > float.max)
-    {
-        e.type = Type.Double;
-        e.data = nativeToBigEndian(value).idup;
-    }
-    else
-    {
-        e.type = Type.Float;
-        e.data = nativeToBigEndian(cast(float)value).idup;
-    }   
-    
-    return e;
-}
-
-Element encode(bool value)
-{
-    Element e = Element();
-    e.type = (value) ? Type.True : Type.False;
-        
-    return e;
-}
-
-Element encode(string value)
-{
-    if(value.length > uint.max)
-        throw new Exception("string cannot be larger than " ~ to!string(uint.max));
-        
-    Element e = Element();
-    e.type = (value.length < ubyte.max) ? Type.StringSmall : Type.StringLarge;
-    e.length = cast(uint)value.length;
-    e.data = cast(immutable(ubyte)[])value;
-    
-    return e;
-}
-
-Element encode(typeof(null))
-{
-    return Element(Type.Null);
-}
-
-
 /**
- * Given a set of static values, creates an Element type for each
+ * Given a set of static values, creates an Element for each
  */
-Element[] elements(T...)(T args)
+Element[] encodeToElements(T...)(T args)
 {
     Element[] e;
-    foreach(arg; args)
-        e ~= encode(arg);
-        
+    foreach(a; args)
+        e ~= toElement(a);
+       
     return e;
 }
 
-
 /**
- * Given a set of static values, converts them to bytes in UBJSON format
+ * Given a variable set of parameters encodes the data to UBJSON format.
+ * Paramaters can be : strings, integers, floats, bools, nulls or Elements
  */
-immutable(ubyte)[] toUBJSON(T...)(T args)
+immutable(ubyte)[] encode(T...)(T args)
 {
     immutable(ubyte)[] bytes;
-    foreach(arg; args)
-        bytes ~= encode(arg).bytes;
+    
+    Element[] elements = encodeToElements(args);
+    foreach(e; elements)
+        bytes ~= e.bytes;
         
     return bytes;
 }
 
-Element[] toElements(in immutable(ubyte)[] bytes)
+/**
+ * Decodes UBJSON ubytes[] into Element[]
+ */ 
+Element[] decode(in immutable(ubyte)[] bytes)
 {
     Element[] results;
     
     uint pointer = 0;
     while(pointer < bytes.length)
     {
-        char c = bytes[pointer++];
-        Element e;
-        
-        switch(c)
-        {
-            case Type.Null:
-            case Type.True:
-            case Type.False:
-                e = Element(cast(Type)c);
-                break;
-                
-            case Type.Byte:
-                e = Element(cast(Type)c, 0, bytes[pointer .. pointer+1].idup);
-                pointer += 1;
-                break;
-                
-            case Type.Int16:
-                e = Element(cast(Type)c, 0, bytes[pointer .. pointer+2].idup);
-                pointer += 2;
-                break;
-                
-            case Type.Int32:
-            case Type.Float:
-                e = Element(cast(Type)c, 0, bytes[pointer .. pointer+4].idup);
-                pointer += 4;
-                break;
-                
-            case Type.Int64:
-            case Type.Double:
-                e = Element(cast(Type)c, 0, bytes[pointer .. pointer+8].idup);
-                pointer += 8;
-                break;
-                
-            case Type.StringSmall:
-                ubyte[1] l = bytes[pointer .. pointer + 1];
-                ubyte dl = bigEndianToNative!ubyte(l);
-                pointer++; //Increment by size of dl
-                e = Element(cast(Type)c, dl, bytes[pointer .. pointer + dl].idup);
-                pointer += dl;
-                break;
-            case Type.StringLarge:
-                ubyte size = 4;
-                ubyte[4] l = bytes[pointer .. pointer + size];
-                uint dl = bigEndianToNative!uint(l);
-                pointer += size; //Increment by size of dl
-                e = Element(cast(Type)c, dl, bytes[pointer .. pointer + dl].idup);
-                pointer += dl;
-                break;
-                
-            //Container types
-            case Type.ArraySmall:
-            case Type.ObjectSmall:
-                ubyte size = 1;
-                ubyte[1] l = bytes[pointer .. pointer + size];
-                ubyte count = bigEndianToNative!ubyte(l);
-                pointer += size;
-                e = Element(cast(Type)c,count);
-                break;
-                
-           case Type.ArrayLarge:
-           case Type.ObjectLarge:
-                ubyte size = 4;
-                ubyte[1] l = bytes[pointer .. pointer + size];
-                ubyte count = bigEndianToNative!ubyte(l);
-                pointer += size;
-                e = Element(cast(Type)c,count);
-                break;
-                
-            default:
-                throw new Exception("Unsupported type '" ~ c ~ "'");
-        }
-        
+        Element e = toElement(bytes[pointer .. $]);
+        pointer += e.length.sizeof + e.bytes.length + 1; //e.bytes is expensive. All we need is a pointer to the next item
         results ~= e;
     }
     
     return results;
 }
 
+/**
+ * Creates a UBJSON array (Element) from the given args.
+ * Args can be anything that can be decoded by encodeToElements
+ */
+Element array(T...)(T args)
+{
+    Element[] elements = encodeToElements(args);
+        
+    auto e = Element((elements.length <= ubyte.max) ? Type.ArraySmall : Type.ArrayLarge, cast(uint)elements.length);
+    e.array = elements;
+    
+    return e; 
+}
+
+//Element objectElement(T...)(T[string] args)
+//{
+//    Element[string] elements;
+//    
+//    for(uint i = 0; i < args.length; i += 2)
+//    {
+//        auto key = args[i];
+//        
+//        if(!is(key : string))
+//            throw new Exception(a ~ " cannot be converted to a string");
+//            
+//        elements[key] = toElement((i + 1 < args.length) ? args[i + 1] : null);
+//    }
+//        
+//    auto e = Element((elements.length <= ubyte.max) ? Type.ObjectSmall : Type.ObjectLarge, cast(uint)elements.length);
+//    e.object = elements;
+//    
+//    return e; 
+//}
+
+private :
+    
+    /**
+     * Decodes a ubyte[] to an Element
+     */
+    Element toElement(in immutable(ubyte)[] bytes)
+    {
+        if(!bytes.length)
+            return Element(Type.Empty);
+            
+        int pointer = 0;
+        char c = bytes[pointer];
+        
+        switch(c)
+        {
+            case Type.Null:
+            case Type.True:
+            case Type.False:
+                return Element(cast(Type)c);
+                
+            case Type.Byte:
+                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+1].idup);
+
+            case Type.Int16:
+                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+2].idup);
+                
+            case Type.Int32:
+            case Type.Float:
+                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+4].idup);
+                
+            case Type.Int64:
+            case Type.Double:
+                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+8].idup);
+                
+            case Type.StringSmall:
+                ubyte[1] l = bytes[ ++pointer .. pointer + 1];
+                pointer += 1; //Increment by length of l
+                return Element(cast(Type)c, l[0], bytes[pointer .. pointer + l[0]].idup);
+                
+            case Type.StringLarge:
+                ubyte size = 4;
+                ubyte[4] l = bytes[ ++pointer .. pointer + size];
+                uint dl = bigEndianToNative!uint(l);
+                pointer += size; //Increment by size of dl
+                return Element(cast(Type)c, dl, bytes[pointer .. pointer + dl].idup);
+                
+                //Container types
+            case Type.ArraySmall:
+            case Type.ArrayLarge:
+                
+                ubyte size = 1;
+                uint count = 0;
+                
+                if(c == Type.ArrayLarge)
+                {
+                    size = 4;
+                    ubyte[4] l = bytes[++pointer .. pointer + size];
+                    count = bigEndianToNative!uint(l);
+                }
+                else
+                {
+                    ubyte[1] l = bytes[++pointer .. pointer + size];
+                    count = bigEndianToNative!ubyte(l);
+                }   
+                
+                pointer += size;
+                auto e = Element(cast(Type)c, count);
+            
+                for(uint i = 0; i < count; i++)
+                {
+                    auto te = toElement(bytes[pointer .. $]);
+                    pointer += te.bytes.length;
+                    e.array ~= te;
+                }
+                   
+                return e;
+            
+            case Type.ObjectSmall:
+            case Type.ObjectLarge:
+                ubyte size = (c == Type.ObjectLarge) ? 4 : 1;
+                ubyte[1] l = bytes[pointer .. pointer + size];
+                ubyte count = bigEndianToNative!ubyte(l);
+                pointer += size;
+                return Element(cast(Type)c,count);
+                
+            default:
+                throw new Exception("Unsupported type '" ~ c ~ "'");
+        }
+    }
+    
+    Element toElement(long value)
+    {
+        Element e = Element();
+        
+        if (value <= byte.max && value >= byte.min)
+        {
+            e.type = Type.Byte;
+            e.data ~= cast(immutable(byte))value;
+        }
+        else if(value <= short.max && value >= short.min)
+        {
+            e.type = Type.Int16;
+            e.data = nativeToBigEndian(cast(short)value).idup;
+        }
+        else if(value <= int.max && value >= int.min)
+        {
+            e.type = Type.Int32;
+            e.data = nativeToBigEndian(cast(int)value).idup;
+        }
+        else
+        {
+            e.type = Type.Int64;
+            e.data = nativeToBigEndian(value).idup;
+        }
+        
+        return e;
+    }
+    
+    Element toElement(double value)
+    {
+        Element e = Element();
+        
+        if(value > float.max)
+        {
+            e.type = Type.Double;
+            e.data = nativeToBigEndian(value).idup;
+        }
+        else
+        {
+            e.type = Type.Float;
+            e.data = nativeToBigEndian(cast(float)value).idup;
+        }   
+        
+        return e;
+    }
+    
+    Element toElement(bool value)
+    {
+        Element e = Element();
+        e.type = (value) ? Type.True : Type.False;
+            
+        return e;
+    }
+    
+    Element toElement(string value)
+    {
+        if(value.length > uint.max)
+            throw new Exception("string cannot be larger than " ~ to!string(uint.max));
+            
+        Element e = Element();
+        e.type = (value.length < ubyte.max) ? Type.StringSmall : Type.StringLarge;
+        e.length = cast(uint)value.length;
+        e.data = cast(immutable(ubyte)[])value;
+        
+        return e;
+    }
+    
+    Element toElement(typeof(null))
+    {
+        return Element(Type.Null);
+    }
+
+    Element toElement(Element e)
+    {
+        return e;
+    }
+
 unittest
 {
-    Element ie = encode(int.max);
-    ubyte[] encoding = [73, 255, 255, 255, 127];
-    assert(ie.bytes == encoding);
-    
-    Element ar = encode("مرحبا");
-    ubyte[] ae = [115, 10, 217, 133, 216, 177, 216, 173, 216, 168, 216, 167];
-    assert(ar.bytes == encoding);
-    
-    Element[] elements = elements(int.max, "مرحبا");
-        
-    assert(bytes(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
-    assert(bytes(int.max, "مرحبا") == elements.bytes);
-    assert(elements.bytes == (ie.bytes ~ ar.bytes));
+//    Element ie = toElement(int.max);
+//    ubyte[] encoding = [73, 255, 255, 255, 127];
+//    assert(ie.bytes == encoding);
+//    
+//    Element ar = toElement("مرحبا");
+//    ubyte[] ae = [115, 10, 217, 133, 216, 177, 216, 173, 216, 168, 216, 167];
+//    assert(ar.bytes == encoding);
+//    
+//    Element[] elements = elements(int.max, "مرحبا");
+//        
+//    assert(bytes(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
+//    assert(bytes(int.max, "مرحبا") == elements.bytes);
+//    assert(elements.bytes == (ie.bytes ~ ar.bytes));
 }

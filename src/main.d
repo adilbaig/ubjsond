@@ -5,20 +5,12 @@ import std.stdio,
 
 void main(string[] args)
 {
-    string longstring = std.array.replicate("A", ubyte.max);
-    Element ie = encode(int.max);
-    Element ar = encode("مرحبا");
-    Element ls = encode(longstring);
-        
-    writeln(toUBJSON(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
-    writeln(toElements(toUBJSON(true, false, null)));
+    auto e = array("PHP", "Javascript");
+    auto c = array("Adil", 29, 29.786, e);
     
-    writeln(ls, ar);
-    writeln(toElements(toUBJSON("مرحبا", longstring, true, "Adil")));
+    writeln(c, decode(c.bytes)[0]);
+//    writeln(objectElement("Name", "Adil"));
     
-    auto e = Element(Type.ArraySmall, 3, toUBJSON("Adil", 29, 29.786));
-    writeln(e);
-    
-    e = Element(Type.ObjectSmall, 2, toUBJSON("User", "Adil123", "Vitals") ~ e.bytes());
-    writeln(e);
+//    e = Element(Type.ObjectSmall, 2, encode("User", "Adil123", "Vitals") ~ e.bytes());
+//    writeln(e);
 }
