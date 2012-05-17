@@ -39,7 +39,6 @@ struct Element {
     union {
         immutable(ubyte)[] data; //If this data if filled manually, you are responsible for bigEndianning it
         Element[] array;
-        Element[string] object;
     }
     
     @property string toString()
@@ -83,7 +82,16 @@ struct Element {
                 
             case Type.ObjectSmall:    
             case Type.ObjectLarge:
-                return "Object(" ~ to!string(length) ~ ")";                
+            
+                string[] pairs;
+                for(uint i = 0; i < data.length; i += 2)
+                {
+                    auto key   = array[i].toString();
+                    auto value = array[i + 1].toString();
+                    pairs ~= (key ~ ":" ~ value);
+                }
+                
+                return "{" ~ std.array.join(pairs, ", ") ~ "}";
         }
         
         return "ERROR!";
@@ -103,15 +111,13 @@ struct Element {
             else
                 t ~= nativeToBigEndian(length).idup;
 
-        if(type == Type.ArraySmall || type == Type.ArrayLarge)
+        if(type == Type.ArraySmall 
+            || type == Type.ArrayLarge
+            || type == Type.ObjectSmall 
+            || type == Type.ObjectLarge
+            )
             foreach(a; array)
                 t ~= a.bytes();
-        else if(type == Type.ObjectSmall || type == Type.ObjectLarge)
-            foreach(k, a; object)
-            {
-                t ~= encode(k); //key is a string
-                t ~= a.bytes();
-            }
         else if(data.length > 0)
             t ~= data;
         
@@ -120,7 +126,8 @@ struct Element {
 }
 
 /**
- * Given a set of static values, creates an Element for each
+ * Given a variable set of parameters encodes the data to Element[].
+ * Args can be : strings, integers, floats, bools, nulls or Elements
  */
 Element[] encodeToElements(T...)(T args)
 {
@@ -133,7 +140,7 @@ Element[] encodeToElements(T...)(T args)
 
 /**
  * Given a variable set of parameters encodes the data to UBJSON format.
- * Paramaters can be : strings, integers, floats, bools, nulls or Elements
+ * Args can be anything that can be decoded by encodeToElements
  */
 immutable(ubyte)[] encode(T...)(T args)
 {
@@ -157,7 +164,7 @@ Element[] decode(in immutable(ubyte)[] bytes)
     while(pointer < bytes.length)
     {
         Element e = toElement(bytes[pointer .. $]);
-        pointer += e.length.sizeof + e.bytes.length + 1; //e.bytes is expensive. All we need is a pointer to the next item
+        pointer += e.length.sizeof + e.bytes().length + 1; //e.bytes is expensive. All we need is a pointer to the next item
         results ~= e;
     }
     
@@ -178,25 +185,23 @@ Element array(T...)(T args)
     return e; 
 }
 
-//Element objectElement(T...)(T[string] args)
-//{
-//    Element[string] elements;
-//    
-//    for(uint i = 0; i < args.length; i += 2)
-//    {
-//        auto key = args[i];
-//        
-//        if(!is(key : string))
-//            throw new Exception(a ~ " cannot be converted to a string");
-//            
-//        elements[key] = toElement((i + 1 < args.length) ? args[i + 1] : null);
-//    }
-//        
-//    auto e = Element((elements.length <= ubyte.max) ? Type.ObjectSmall : Type.ObjectLarge, cast(uint)elements.length);
-//    e.object = elements;
-//    
-//    return e; 
-//}
+/**
+ * Creates a UBJSON Object (Element) from the given args.
+ * Args can be anything that can be decoded by encodeToElements
+ */
+Element objectElement(T...)(T args)
+{
+    if(args.length % 2 > 0)
+        throw new Exception("Object is incomplete");
+    
+    Element[] elements = encodeToElements(args);
+        
+    auto l =  cast(uint)elements.length/2;
+    auto e = Element((l <= ubyte.max) ? Type.ObjectSmall : Type.ObjectLarge, l);
+    e.array = elements;
+    
+    return e;
+}
 
 private :
     
@@ -209,7 +214,7 @@ private :
             return Element(Type.Empty);
             
         int pointer = 0;
-        char c = bytes[pointer];
+        char c = bytes[pointer++];
         
         switch(c)
         {
@@ -219,27 +224,27 @@ private :
                 return Element(cast(Type)c);
                 
             case Type.Byte:
-                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+1].idup);
+                return Element(cast(Type)c, 0, bytes[pointer .. pointer+1].idup);
 
             case Type.Int16:
-                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+2].idup);
+                return Element(cast(Type)c, 0, bytes[pointer .. pointer+2].idup);
                 
             case Type.Int32:
             case Type.Float:
-                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+4].idup);
+                return Element(cast(Type)c, 0, bytes[pointer .. pointer+4].idup);
                 
             case Type.Int64:
             case Type.Double:
-                return Element(cast(Type)c, 0, bytes[++pointer .. pointer+8].idup);
+                return Element(cast(Type)c, 0, bytes[pointer .. pointer+8].idup);
                 
             case Type.StringSmall:
-                ubyte[1] l = bytes[ ++pointer .. pointer + 1];
-                pointer += 1; //Increment by length of l
-                return Element(cast(Type)c, l[0], bytes[pointer .. pointer + l[0]].idup);
+                ubyte l = bytes[pointer .. pointer + 1][0];
+                pointer++;
+                return Element(cast(Type)c, l, bytes[pointer .. pointer + l].idup);
                 
             case Type.StringLarge:
                 ubyte size = 4;
-                ubyte[4] l = bytes[ ++pointer .. pointer + size];
+                ubyte[4] l = bytes[ pointer .. pointer + size];
                 uint dl = bigEndianToNative!uint(l);
                 pointer += size; //Increment by size of dl
                 return Element(cast(Type)c, dl, bytes[pointer .. pointer + dl].idup);
@@ -249,19 +254,14 @@ private :
             case Type.ArrayLarge:
                 
                 ubyte size = 1;
-                uint count = 0;
+                uint count = bytes[pointer .. pointer + size][0];
                 
                 if(c == Type.ArrayLarge)
                 {
                     size = 4;
-                    ubyte[4] l = bytes[++pointer .. pointer + size];
+                    ubyte[4] l = bytes[pointer .. pointer + size];
                     count = bigEndianToNative!uint(l);
                 }
-                else
-                {
-                    ubyte[1] l = bytes[++pointer .. pointer + size];
-                    count = bigEndianToNative!ubyte(l);
-                }   
                 
                 pointer += size;
                 auto e = Element(cast(Type)c, count);
@@ -277,11 +277,28 @@ private :
             
             case Type.ObjectSmall:
             case Type.ObjectLarge:
-                ubyte size = (c == Type.ObjectLarge) ? 4 : 1;
-                ubyte[1] l = bytes[pointer .. pointer + size];
-                ubyte count = bigEndianToNative!ubyte(l);
+            
+                ubyte size = 1;
+                uint count = bytes[pointer .. pointer + size][0];
+                
+                if(c == Type.ObjectLarge)
+                {
+                    size = 4;
+                    ubyte[4] l = bytes[pointer .. pointer + size];
+                    count = bigEndianToNative!uint(l);
+                }
+                
                 pointer += size;
-                return Element(cast(Type)c,count);
+                auto e = Element(cast(Type)c, count/2);
+            
+                for(uint i = 0; i < count; i++)
+                {
+                    auto te = toElement(bytes[pointer .. $]);
+                    pointer += te.bytes.length;
+                    e.array ~= te;
+                }
+                   
+                return e;
                 
             default:
                 throw new Exception("Unsupported type '" ~ c ~ "'");
