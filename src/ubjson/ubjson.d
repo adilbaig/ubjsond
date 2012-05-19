@@ -16,8 +16,8 @@ enum Type : char {
     Int64 = 'L',
     Float = 'd',
     Double = 'D',
-//    HugeSmall = 'h', //Not supported
-//    HugeLarge = 'H', //Not supported
+    HugeSmall = 'h',
+    HugeLarge = 'H', 
     StringSmall = 's',
     StringLarge = 'S',
     ObjectSmall = 'o',
@@ -71,6 +71,10 @@ struct Element {
             case Type.Double:
                 ubyte[8] temp = data[0 .. $];
                 return to!string(bigEndianToNative!(double)(temp));
+            
+            case Type.HugeSmall:
+            case Type.HugeLarge:
+                return cast(string)data;
             
             case Type.StringSmall:
             case Type.StringLarge:
@@ -175,7 +179,7 @@ Element[] decode(in immutable(ubyte)[] bytes)
  * Creates a UBJSON array (Element) from the given args.
  * Args can be anything that can be decoded by encodeToElements
  */
-Element array(T...)(T args)
+Element arrayElement(T...)(T args)
 {
     Element[] elements = encodeToElements(args);
         
@@ -236,12 +240,14 @@ private :
             case Type.Int64:
             case Type.Double:
                 return Element(cast(Type)c, 0, bytes[pointer .. pointer+8].idup);
-                
+            
+            case Type.HugeSmall:    
             case Type.StringSmall:
                 ubyte l = bytes[pointer .. pointer + 1][0];
                 pointer++;
                 return Element(cast(Type)c, l, bytes[pointer .. pointer + l].idup);
                 
+            case Type.HugeLarge:
             case Type.StringLarge:
                 ubyte size = 4;
                 ubyte[4] l = bytes[ pointer .. pointer + size];
