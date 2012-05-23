@@ -469,17 +469,61 @@ private :
 
 unittest
 {
-//    Element ie = toElement(int.max);
-//    ubyte[] encoding = [73, 255, 255, 255, 127];
-//    assert(ie.bytes == encoding);
-//    
-//    Element ar = toElement("مرحبا");
-//    ubyte[] ae = [115, 10, 217, 133, 216, 177, 216, 173, 216, 168, 216, 167];
-//    assert(ar.bytes == encoding);
-//    
-//    Element[] elements = elements(int.max, "مرحبا");
-//        
-//    assert(bytes(int.max, "مرحبا") == (ie.bytes ~ ar.bytes));
-//    assert(bytes(int.max, "مرحبا") == elements.bytes);
-//    assert(elements.bytes == (ie.bytes ~ ar.bytes));
+    auto e = Element(Type.Null);
+    assert(e.bytes == [cast(byte)'Z']);
+    assert(e.bytes == encode(null));
+    
+    e = Element(Type.True);
+    assert(e.bytes == [cast(byte)'T']);
+    assert(e.bytes == encode(true));
+    
+    e = Element(Type.False);
+    assert(e.bytes == [cast(byte)'F']);
+    assert(e.bytes == encode(false));
+    
+    e = Element(Type.Byte, byte.max);
+    assert(e.bytes == [cast(byte)'B', byte.max]);
+    assert(e.bytes == encode(byte.max));
+    
+    e = Element(Type.Int16);
+    e.data = nativeToBigEndian(short.max);
+    assert(e.bytes == [cast(byte)'i', 127, 255]);
+    assert(e.bytes == encode(short.max));
+    
+    e = Element(Type.Int32);
+    e.data = nativeToBigEndian(int.max);
+    assert(e.bytes == [cast(byte)'I', 127, 255, 255, 255]);
+    assert(e.bytes == encode(int.max));
+    
+    e = Element(Type.Int64);
+    e.data = nativeToBigEndian(long.max);
+    assert(e.bytes == [cast(byte)'L', 127, 255, 255, 255, 255, 255, 255, 255]);
+    assert(e.bytes == encode(long.max));
+    
+    e = Element(Type.Float);
+    e.data = nativeToBigEndian(float.max);
+    assert(e.bytes == [cast(byte)'d', 127, 127, 255, 255]);
+    assert(e.bytes == encode(float.max));
+    
+    e = Element(Type.Double);
+    e.data = nativeToBigEndian(double.max);
+    assert(e.bytes == [cast(byte)'D', 127, 239, 255, 255, 255, 255, 255, 255]);
+    assert(e.bytes == encode(double.max));
+    
+    e = Element(Type.StringSmall, 10);
+    e.data = cast(immutable(ubyte)[])"مرحبا";
+    ubyte[] ae = [115, 10, 217, 133, 216, 177, 216, 173, 216, 168, 216, 167];
+    assert(e.bytes == ae);
+    assert(e.bytes == encode("مرحبا"));
+    
+    e = Element(Type.ArraySmall, 2);
+    e.array ~= elements(byte.max);
+    e.array ~= elements(int.max);
+    assert(e.bytes == arrayElement(byte.max, int.max).bytes);
+    assert(e.bytes.length == 2 + 2 + 5); //2 for array, 2 for byte and 5 for int
+
+    e = Element(Type.ObjectSmall, 1);
+    e.array ~= elements("Name");
+    e.array ~= elements("Adil Baig");
+    assert(e.bytes == objectElement("Name", "Adil Baig").bytes);
 }
