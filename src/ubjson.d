@@ -1,4 +1,4 @@
-module ubjson.ubjson;
+module ubjson;
 
 private import
     std.stdio,

@@ -1,6 +1,6 @@
 
 import std.stdio,
-    ubjson.ubjson
+    ubjson
     ;
 
 void main(string[] args)
