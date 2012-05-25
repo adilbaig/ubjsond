@@ -531,4 +531,9 @@ unittest
     for(uint i = 0; i < 256; i++)
         e.array ~= elements("Inc", 1);
     assert(e.bytes.length == 1 + 4 + (elements("Inc")[0].bytes.length * 256) + (elements(1)[0].bytes.length * 256));
+    
+    //Type checking
+    e = Element(Type.Int32);
+    e.data = nativeToBigEndian(int.max);
+    assert(is(typeof(e.value!int()) == int));
 }
