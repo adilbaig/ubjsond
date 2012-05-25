@@ -1,12 +1,13 @@
 module ubjson;
 
-private import
-    std.stdio,
-    std.bitmanip,
-    std.conv;
+private import std.bitmanip;
+private import std.stdio : writeln;
+private import std.conv : to;
+private import std.array : join;
+
 
 enum Type : char {
-    Empty = 'e',
+    Error = 'e',
     Null  = 'Z',
     True  = 'T',
     False = 'F',
@@ -113,9 +114,9 @@ struct Element {
     {
         string ret;
         
-        final switch(type)
+        switch(type)
         {
-            case Type.Null:
+        	case Type.Null:
                 return "null";
             case Type.True:
                 return "true";
@@ -146,11 +147,21 @@ struct Element {
             
             case Type.StringSmall:
             case Type.StringLarge:
-                return "\"" ~ cast(string)data ~ "\"";
+                return cast(string)data;
                 
             case Type.ArraySmall:
             case Type.ArrayLarge:
-                return to!string(array);
+                
+                string[] arr;
+                foreach(val; array)
+                    if(val.type == Type.StringSmall 
+                    	|| val.type == Type.StringLarge
+                    	)
+                    	arr ~= "\"" ~ val.toString() ~ "\"";
+                	else
+                    	arr ~= val.toString();
+                
+                return "[" ~ join(arr, ", ") ~ "]";
                 
             case Type.ObjectSmall:    
             case Type.ObjectLarge:
@@ -159,14 +170,24 @@ struct Element {
                 for(uint i = 0; i < data.length; i += 2)
                 {
                     auto key   = array[i].toString();
-                    auto value = array[i + 1].toString();
+                    Element val = array[i + 1];
+                    string value;
+                     
+                    if(val.type == Type.StringSmall 
+                    	|| val.type == Type.StringLarge
+                    	)
+                    	value = "\"" ~ val.toString() ~ "\"";
+                	else
+                    	value = val.toString();
+                    	
                     pairs ~= (key ~ ":" ~ value);
                 }
                 
-                return "{" ~ std.array.join(pairs, ", ") ~ "}";
+                return "{" ~ join(pairs, ", ") ~ "}";
+                
+            default :
+            	return "ERROR!";
         }
-        
-        return "ERROR!";
     }
     
     @property immutable(ubyte)[] bytes()
@@ -199,11 +220,37 @@ struct Element {
     
     T opCast(T)() { return value!T; }
 
-    //opAssign
+    //For arrays
+    Element opIndex(uint index)
+    {
+    	if(!(type.ArraySmall || type.ArrayLarge))
+    		throw new IndexException("Not an array");
+    		
+		return array[index];
+    }
+    
+    //For objects
+    Element opIndex(string key)
+    {
+    	if(!(type.ObjectSmall || type.ObjectLarge))
+    		throw new IndexException("Not an object");
+    		
+		foreach(i, val; array)
+			if(val.toString == key)
+				return array[i + 1];
+				
+		return Element(Type.Error);
+    }
+
     //opIndex, opSlice for arrays and objects
 }
 
 class IncompatibleCastException : Exception
+{
+    this(string message){ super(message); }
+}
+
+class IndexException : Exception
 {
     this(string message){ super(message); }
 }
@@ -294,7 +341,7 @@ private :
     Element toElement(in immutable(ubyte)[] bytes)
     {
         if(!bytes.length)
-            return Element(Type.Empty);
+            return Element(Type.Error);
             
         int pointer = 0;
         char c = bytes[pointer++];
@@ -536,4 +583,5 @@ unittest
     e = Element(Type.Int32);
     e.data = nativeToBigEndian(int.max);
     assert(is(typeof(e.value!int()) == int));
+
 }
