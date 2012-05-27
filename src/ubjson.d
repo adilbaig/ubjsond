@@ -40,6 +40,7 @@ struct Element {
     union {
         immutable(ubyte)[] data; //If this data if filled manually, you are responsible for bigEndianning it
         Element[] array;
+        Element[string] object; //Use this for objects
     }
     
     bool isNull()
@@ -217,9 +218,37 @@ struct Element {
         return t;
     }
     
+    @property bool isArray()
+    {
+        return (type == Type.ArraySmall || type == Type.ArrayLarge);
+    } 
+    
+    @property bool isObject()
+    {
+        return (type == Type.ArraySmall || type == Type.ArrayLarge);
+    }
+    
+    @property bool isContainer()
+    {
+        return (isObject() || isArray());
+    } 
+    
+    int opEquals(ref Element e) 
+    {
+        return (e.bytes() == bytes());
+    }
     
     T opCast(T)() { return value!T; }
 
+    //For arrays
+//    ulong opDollar() //Not implemented by D compiler yet
+//    {
+//        if(!(type.ArraySmall || type.ArrayLarge))
+//            throw new IndexException("Not an array");
+//            
+//        return array.length;
+//    }
+    
     //For arrays
     Element opIndex(uint index)
     {
@@ -227,6 +256,21 @@ struct Element {
     		throw new IndexException("Not an array");
     		
 		return array[index];
+    }
+    
+    //For arrays
+    void opIndexAssign(Element e, int index)
+    {
+        if(!(type.ArraySmall || type.ArrayLarge))
+            throw new IndexException("Not an array");
+            
+        array[index] = e;
+    }
+    
+    //For arrays
+    Element[] opSlice(int start, int end)
+    {
+        return array[start .. end];
     }
     
     //For objects
@@ -242,7 +286,21 @@ struct Element {
 		return Element(Type.Error);
     }
 
-    //opIndex, opSlice for arrays and objects
+    //For objects
+    void opIndexAssign(Element e, string key)
+    {
+        if(!(type.ObjectSmall || type.ObjectLarge))
+            throw new IndexException("Not an object");
+            
+        foreach(i, val; array)
+            if(val.toString == key)
+            {
+                array[i + 1] = e;
+                return;
+            }   
+            
+        array ~= elements(key, e);
+    }
 }
 
 class IncompatibleCastException : Exception
@@ -266,6 +324,14 @@ Element[] elements(T...)(T args)
         e ~= toElement(a);
        
     return e;
+}
+
+/**
+ * @see elements
+ */
+Element element(T)(T arg)
+{
+    return toElement(arg);
 }
 
 /**
@@ -497,9 +563,9 @@ private :
             throw new Exception("string cannot be larger than " ~ to!string(uint.max));
             
         Element e = Element();
-        e.type = (value.length < ubyte.max) ? Type.StringSmall : Type.StringLarge;
-        e.length = cast(uint)value.length;
-        e.data = cast(immutable(ubyte)[])value;
+        e.type    = (value.length < ubyte.max) ? Type.StringSmall : Type.StringLarge;
+        e.length  = cast(uint)value.length;
+        e.data    = cast(immutable(ubyte)[])value;
         
         return e;
     }
@@ -568,6 +634,7 @@ unittest
     e.array ~= elements(int.max);
     assert(e.bytes == arrayElement(byte.max, int.max).bytes);
     assert(e.bytes.length == 2 + 2 + 5); //2 for array, 2 for byte and 5 for int
+    assert(e[0 .. 2] == elements(byte.max,int.max)); //Comparing arrays of Elements
 
     e = Element(Type.ObjectSmall, 1);
     e.array ~= elements("Name");

@@ -13,11 +13,6 @@ import
 
 void main(string[] args)
 {
-    //Create a decent example showing encoding of static values, and creation of arrays/objects
-    //Decode sample values, print them and do type checks
-    //Append, delete array values
-    //Append, delete object properties
-    
     /*
     The Element struct represents a single ubjson entity. 
     An entity can be a static value type (int, float, bool etc.) or a container type (array or object)
@@ -36,7 +31,7 @@ void main(string[] args)
     
     //And, get the value back
     int val = ei.value!int();
-    int isTrue = cast(bool)et;
+    bool isTrue = cast(bool)et; //Same as et.value!bool();
     
     /*
     An easier way, is to use the 'elements' template. It will create an Element for each argument,
@@ -59,6 +54,10 @@ void main(string[] args)
     Element person2  	= objectElement("Name", "Andrei", "Age", 43, "Score", 99.16, "Distinction", true, "Skills", arrayElement("C++", "C", "D"));
     Element candidates  = objectElement("Awesome", arrayElement(person1, person2));
     
+    //And here's how to append/replace a value in an object
+    candidates["Done"] = element(true); 
+    candidates.remove("Done");
+    
     //See the JSON
     writeln("JSON : ", candidates);
     
@@ -73,8 +72,11 @@ void main(string[] args)
     auto firstTag = tags[0].value!string();
     writeln("Tag : ", firstTag);
     
+    //This will display "ERROR!";
     auto err = candidates["Non existent property!"];
     writeln(err);
-    //To get a full UBJSON of multiple items
     
+    //To get a full UBJSON of multiple items, use encode()
+    immutable(ubyte)[] ubj = encode("Hello World!", tags);
+    writeln(ubj);
 }
