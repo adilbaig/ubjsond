@@ -262,6 +262,7 @@ struct Element {
         assert(isArray(),"Not an array");
             
         array[index] = e;
+        length = array.length;
     }
     
     //For arrays
@@ -297,6 +298,7 @@ struct Element {
             }   
             
         array ~= elements(key, e);
+        length = array.length / 2;
     }
 }
 
