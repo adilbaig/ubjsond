@@ -302,6 +302,16 @@ struct Element {
         length = cast(uint)array.length / 2;
     }
     
+    bool remove(int index)
+    {
+        assert(isArray(),"Not an array");
+
+        if(array.length < index)
+            return false;
+            
+        std.algorithm.remove(array, index);
+        return true;
+    }
 }
 
 class IncompatibleCastException : Exception
