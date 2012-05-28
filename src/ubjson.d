@@ -43,11 +43,6 @@ struct Element {
         Element[string] object; //Use this for objects
     }
     
-    bool isNull()
-    {
-        return (type == Type.Null);
-    }
-    
     /**
      * Get the value stored in this Element. 
      */
@@ -191,7 +186,7 @@ struct Element {
         }
     }
     
-    @property immutable(ubyte)[] bytes()
+    @property immutable(ubyte)[] bytes() 
     {
         immutable(ubyte)[] t;
         t ~= type;
@@ -218,6 +213,11 @@ struct Element {
         return t;
     }
     
+    @property bool isNull()
+    {
+        return (type == Type.Null);
+    }
+    
     @property bool isArray()
     {
         return (type == Type.ArraySmall || type == Type.ArrayLarge);
@@ -225,7 +225,7 @@ struct Element {
     
     @property bool isObject()
     {
-        return (type == Type.ArraySmall || type == Type.ArrayLarge);
+        return (type == Type.ObjectSmall || type == Type.ObjectLarge);
     }
     
     @property bool isContainer()
@@ -262,7 +262,7 @@ struct Element {
         assert(isArray(),"Not an array");
             
         array[index] = e;
-        length = array.length;
+        length = cast(uint)array.length;
     }
     
     //For arrays
@@ -288,6 +288,7 @@ struct Element {
     //For objects
     void opIndexAssign(Element e, string key)
     {
+        writeln(e, key);
         assert(isObject(),"Not an object");
             
         foreach(i, val; array)
@@ -298,8 +299,9 @@ struct Element {
             }   
             
         array ~= elements(key, e);
-        length = array.length / 2;
+        length = cast(uint)array.length / 2;
     }
+    
 }
 
 class IncompatibleCastException : Exception

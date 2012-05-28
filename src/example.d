@@ -55,8 +55,7 @@ void main(string[] args)
     Element candidates  = objectElement("Awesome", arrayElement(person1, person2));
     
     //And here's how to append/replace a value in an object
-    candidates["Done"] = element(true); 
-    candidates.remove("Done");
+    candidates["Done"] = element(true);
     
     //See the JSON
     writeln("JSON : ", candidates);
