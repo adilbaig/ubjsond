@@ -243,8 +243,7 @@ struct Element {
     //For arrays
 //    ulong opDollar() //Not implemented by D compiler yet
 //    {
-//        if(!(type.ArraySmall || type.ArrayLarge))
-//            throw new IndexException("Not an array");
+//        assert(isArray(),"Not an array");
 //            
 //        return array.length;
 //    }
@@ -252,8 +251,7 @@ struct Element {
     //For arrays
     Element opIndex(uint index)
     {
-    	if(!(type.ArraySmall || type.ArrayLarge))
-    		throw new IndexException("Not an array");
+    	assert(isArray(),"Not an array");
     		
 		return array[index];
     }
@@ -261,8 +259,7 @@ struct Element {
     //For arrays
     void opIndexAssign(Element e, int index)
     {
-        if(!(type.ArraySmall || type.ArrayLarge))
-            throw new IndexException("Not an array");
+        assert(isArray(),"Not an array");
             
         array[index] = e;
     }
@@ -276,8 +273,7 @@ struct Element {
     //For objects
     Element opIndex(string key)
     {
-    	if(!(type.ObjectSmall || type.ObjectLarge))
-    		throw new IndexException("Not an object");
+    	assert(isObject(),"Not an object");
     		
 		foreach(i, val; array)
 			if(val.toString == key)
@@ -289,8 +285,7 @@ struct Element {
     //For objects
     void opIndexAssign(Element e, string key)
     {
-        if(!(type.ObjectSmall || type.ObjectLarge))
-            throw new IndexException("Not an object");
+        assert(isObject(),"Not an object");
             
         foreach(i, val; array)
             if(val.toString == key)
@@ -304,11 +299,6 @@ struct Element {
 }
 
 class IncompatibleCastException : Exception
-{
-    this(string message){ super(message); }
-}
-
-class IndexException : Exception
 {
     this(string message){ super(message); }
 }
