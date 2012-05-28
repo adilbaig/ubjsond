@@ -57,6 +57,9 @@ void main(string[] args)
     //And here's how to append/replace a value in an object
     candidates["Done"] = element(true);
     
+    //And remove an element from an array
+    tags.remove(2);
+    
     //See the JSON
     writeln("JSON : ", candidates);
     
