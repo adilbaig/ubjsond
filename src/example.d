@@ -40,6 +40,7 @@ void main(string[] args)
     Element[] many = elements("Hello World!");
     many 		  ~= elements(short.max, int.max, double.max, true, null);
     assert(many.length == 6);
+    assert(many[1].value!short == short.max);
     
     //Get the bytes for each element  
     ubjson = [];
