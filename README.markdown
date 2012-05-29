@@ -31,21 +31,19 @@ And here's how to create objects
 	candidates["Name"] = element("Batman");
 	writeln("Name : ", candidates["Name"]); // "Name : Batman"
 	
+	immutable(ubyte)[] ubjson = element.bytes(); //And finally, convert it to ubjson format 
+	
 See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples
 
 ##Run Unittests
 	rdmd --main -unittest src/ubjson.d
 
-All's well that prints nothing
+All's well that prints nothing!
 
 ##DMD
 Tested with dmd 2.059. Does not have any other dependencies 
 
 ##Contributions
-I'd be happy to accomodate any patches, documentation or plain better code. To contribute simply fork this repository and send a pull request to me. Thanks!
+I'd be happy to accomodate any patches, documentation or plain better code. To contribute simply fork this repository and send a pull request. Thanks!
 
-Adil Baig
-
-Benevolent Dictator
-
-[adilbaig.posterous.com](http://adilbaig.posterous.com)
+Adil Baig<br />[adilbaig.posterous.com](http://adilbaig.posterous.com)
