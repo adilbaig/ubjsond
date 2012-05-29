@@ -309,7 +309,28 @@ struct Element {
         if(array.length < index)
             return false;
             
-        std.algorithm.remove(array, index);
+        if(std.algorithm.remove(array, index))
+        {
+            length--;
+            return true;
+        }
+        
+        return false;
+    }
+    
+    bool remove(string key)
+    {
+        assert(isObject(),"Not an object");
+
+        int pos = -1;
+        foreach(i, element; array)
+            if(element.toString() == key && i % 2 == 0)
+                pos = cast(int)i;
+                
+        if(pos < 0)
+            return false;
+        
+        std.algorithm.remove(array, pos, pos+1);
         length--;
         return true;
     }
@@ -643,10 +664,17 @@ unittest
     assert(e.bytes.length == 2 + 2 + 5); //2 for array, 2 for byte and 5 for int
     assert(e[0 .. 2] == elements(byte.max,int.max)); //Comparing arrays of Elements
 
+    e.remove(5); //Remove an element that doesn't exist and ..
+    assert(e.length == 2); //.. the length doesn't change
+    e.remove(0); //Remove an element that does exist and ..
+    assert(e.length == 1); // .. it's updated
+
     e = Element(Type.ObjectSmall, 1);
     e.array ~= elements("Name");
     e.array ~= elements("Adil Baig");
     assert(e.bytes == objectElement("Name", "Adil Baig").bytes);
+    e.remove("Name");
+    assert(e.length == 0); 
     
     e = Element(Type.ObjectLarge, 256);
     for(uint i = 0; i < 256; i++)
