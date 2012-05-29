@@ -11,8 +11,9 @@ To encode and decode, is simple :
 A more flexible way to create and manipulate ubjson objects is to use the elements template function
 
 	Element[] elements = elements("Hello, "World!"); //2 string elements 
+
+Here's how you would create an array of strings
 	
-	//Here's an array
 	Element tags = arrayElement("D", "Python", "PHP", "Javascript", "C");
 	
 	assert(tags.length == 5);
@@ -20,8 +21,10 @@ A more flexible way to create and manipulate ubjson objects is to use the elemen
 	tags.remove(2); //Remove "PHP"
 	writeln(tags); //["D", "Python", "Javascript", "C"]
 	
-	//And an Object
-	Element person = objectElement("Name", "Adil", "Age", 29, "Score", 99.15, "Skills", tags);
+And here's how to create objects	
+	
+	Element person = objectElement("Name", "Adil", "Age", 29, "Score", 99.15, "Skills", tags); 
+	writeln(person); //{Name:"Adil", "Age":29, Score:99.15, Skills:["D", "Python", "Javascript", "C"]}
 	//What's my name?
 	Element name = candidates["Name"];
     writeln("Name : ", name); // "Name : Adil"
@@ -42,5 +45,7 @@ Tested with dmd 2.059. Does not have any other dependencies
 I'd be happy to accomodate any patches, documentation or plain better code. To contribute simply fork this repository and send a pull request to me. Thanks!
 
 Adil Baig
+
 Benevolent Dictator
+
 [adilbaig.posterous.com](http://adilbaig.posterous.com)

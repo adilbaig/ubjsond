@@ -309,13 +309,9 @@ struct Element {
         if(array.length < index)
             return false;
             
-        if(std.algorithm.remove(array, index))
-        {
-            length--;
-            return true;
-        }
-        
-        return false;
+        array = std.algorithm.remove(array, index);
+        length--;
+        return true;
     }
     
     bool remove(string key)
