@@ -3,11 +3,13 @@ A high-level library to read and write to the [Universal Binary JSON](http://ubj
 
 ##Examples
 To encode and decode, is simple :
+
 	immutable(ubyte)[] ubjson = encode(int.max);
 	ubjson = encode(int.max, "Hello World!", byte.max, true, null); // This template supports multiple arguments
 	Element[] elements = decode(ubjson); // And decode 
 	
 A more flexible way to create and manipulate ubjson objects is to use the elements template function
+
 	Element[] elements = elements("Hello, "World!"); //2 string elements 
 	
 	//Here's an array
