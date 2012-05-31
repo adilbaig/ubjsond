@@ -1,7 +1,7 @@
 module ubjson;
 
 private import std.bitmanip;
-private import std.stdio : writeln;
+//private import std.stdio : writeln;
 private import std.conv : to;
 private import std.array : join;
 
@@ -288,7 +288,6 @@ struct Element {
     //For objects
     void opIndexAssign(Element e, string key)
     {
-        writeln(e, key);
         assert(isObject(),"Not an object");
             
         foreach(i, val; array)
@@ -511,9 +510,9 @@ private :
                 }
                 
                 pointer += size;
-                auto e = Element(cast(Type)c, count/2);
-            
-                for(uint i = 0; i < count; i++)
+                auto e = Element(cast(Type)c, count);
+                
+                for(uint i = 0; i < count*2; i++)
                 {
                     auto te = toElement(bytes[pointer .. $]);
                     pointer += te.bytes.length;
