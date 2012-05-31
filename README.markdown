@@ -1,5 +1,5 @@
 # Universal Binary JSON (UBJSON) for D
-A high-level library to read and write to the [Universal Binary JSON](http://ubjson.org/ "ubjson.org") format using native D data types.
+A high-level library to read and write to the [Universal Binary JSON](http://ubjson.org/ "ubjson.org") (Draft 8) format using native D data types.
 
 ##Examples
 To encode and decode, is simple :
