@@ -1,7 +1,7 @@
 module ubjson;
 
 private import std.bitmanip;
-//private import std.stdio : writeln;
+private import std.stdio : writeln;
 private import std.conv : to;
 private import std.array : join;
 
@@ -199,6 +199,8 @@ struct Element {
             }
             else
                 t ~= nativeToBigEndian(length).idup;
+        else if(isArray() || isObject() || isString())
+            t ~= 0;
 
         if(type == Type.ArraySmall 
             || type == Type.ArrayLarge
@@ -227,6 +229,11 @@ struct Element {
     {
         return (type == Type.ObjectSmall || type == Type.ObjectLarge);
     }
+    
+    @property bool isString()
+    {
+        return (type == Type.StringSmall || type == Type.StringLarge);
+    } 
     
     @property bool isContainer()
     {
@@ -486,7 +493,7 @@ private :
                 
                 pointer += size;
                 auto e = Element(cast(Type)c, count);
-            
+                
                 for(uint i = 0; i < count; i++)
                 {
                     auto te = toElement(bytes[pointer .. $]);
