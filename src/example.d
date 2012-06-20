@@ -61,15 +61,17 @@ void main(string[] args)
     //And remove an element from an array
     tags.remove(2);
     
-    //See the JSON
-    writeln("JSON : ", candidates);
-    
-    //As expected, calling bytes gets UBJSON for the entire object
-    ubjson = candidates.bytes();
-    
     //What's my name?
     Element name = candidates["Awesome"][0]["Name"]; //Deeply nested works!
     writeln("Name : ", name);
+    candidates["Awesome"][0]["Name"] = "Batman"; //Assign any value that can be converted to an Element
+    writeln("Name : ", candidates["Awesome"][0]["Name"]);
+    
+    //See the JSON
+    writeln("JSON : ", candidates);
+    
+    //As expected, calling 'bytes' gets UBJSON for the entire object
+    ubjson = candidates.bytes();
     
     //What's the first tag?
     auto firstTag = tags[0].value!string();

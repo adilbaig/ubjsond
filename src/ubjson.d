@@ -264,11 +264,11 @@ struct Element {
     }
     
     //For arrays
-    void opIndexAssign(Element e, int index)
+    void opIndexAssign(T)(T value, int index)
     {
         assert(isArray(),"Not an array");
             
-        array[index] = e;
+        array[index] = toElement(value);
         length = cast(uint)array.length;
     }
     
@@ -293,10 +293,12 @@ struct Element {
     }
 
     //For objects
-    void opIndexAssign(Element e, string key)
+    void opIndexAssign(T)(T value, string key)
     {
         assert(isObject(),"Not an object");
+        Element e = toElement(value);    
             
+        //Search and append ..
         foreach(i, val; array)
             if(val.toString == key)
             {
@@ -304,6 +306,7 @@ struct Element {
                 return;
             }   
             
+        //.. if not found, add
         array ~= elements(key, e);
         length = cast(uint)array.length / 2;
     }
@@ -332,7 +335,7 @@ struct Element {
         if(pos < 0)
             return false;
         
-        std.algorithm.remove(array, pos, pos+1);
+        array = std.algorithm.remove(array, pos, pos+1);
         length--;
         return true;
     }

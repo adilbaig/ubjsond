@@ -25,11 +25,17 @@ Create objects
 	
 	Element person = objectElement("Name", "Adil", "Age", 29, "Score", 99.15, "Skills", tags); 
 	writeln(person); //{Name:"Adil", "Age":29, Score:99.15, Skills:["D", "Python", "Javascript", "C"]}
+	
 	//What's my name?
 	Element name = candidates["Name"];
     writeln("Name : ", name); // "Name : Adil"
-	candidates["Name"] = element("Batman");
+	
+Append an object's attribute	
+
+	candidates["Name"] = "Batman"; // Assign any value that can be converted to an Element
 	writeln("Name : ", candidates["Name"]); // "Name : Batman"
+
+And convert your Element to ubjson 
 	
 	immutable(ubyte)[] ubjson = element.bytes(); //And finally, convert it to ubjson format 
 	
