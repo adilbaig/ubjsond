@@ -36,6 +36,7 @@ Create objects
 See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples.
 
 To run the examples.
+
 	make main
 
 ##Run Unittests
@@ -44,7 +45,7 @@ To run the examples.
 All's well that prints nothing!
 	
 ##UBJSON Dumper
-This simple utility will dump a .ubj file. It does not look at the extension, it passes it straight to the parser. 
+This simple utility will dump a file containing ubjson. Some sample files are located in src/resources. To print a dump :  
 
 	make dump
 	./dump src/resources/CouchDB4k.ubj
