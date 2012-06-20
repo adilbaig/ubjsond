@@ -12,7 +12,7 @@ A more flexible way to create and manipulate ubjson objects is to use the elemen
 
 	Element[] elements = elements("Hello, "World!"); //2 string elements 
 
-Here's how you would create an array of strings
+Create an array of strings
 	
 	Element tags = arrayElement("D", "Python", "PHP", "Javascript", "C");
 	
@@ -21,7 +21,7 @@ Here's how you would create an array of strings
 	tags.remove(2); //Remove "PHP"
 	writeln(tags); //["D", "Python", "Javascript", "C"]
 	
-And here's how to create objects	
+Create objects	
 	
 	Element person = objectElement("Name", "Adil", "Age", 29, "Score", 99.15, "Skills", tags); 
 	writeln(person); //{Name:"Adil", "Age":29, Score:99.15, Skills:["D", "Python", "Javascript", "C"]}
@@ -33,12 +33,21 @@ And here's how to create objects
 	
 	immutable(ubyte)[] ubjson = element.bytes(); //And finally, convert it to ubjson format 
 	
-See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples
+See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples.
+
+To run the examples.
+	make main
 
 ##Run Unittests
-	rdmd --main -unittest src/ubjson.d
-
+	make test
+	
 All's well that prints nothing!
+	
+##UBJSON Dumper
+This simple utility will dump a .ubj file. It does not look at the extension, it passes it straight to the parser. 
+
+	make dump
+	./dump resources/CouchDB4k.ubj
 
 ##DMD
 Tested with dmd 2.059. Does not have any other dependencies 
