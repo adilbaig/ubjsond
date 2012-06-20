@@ -9,4 +9,4 @@ test:
 
 #Compile this utility to print ubj files	
 dump:
-	dmd src/dump.d $(LIB) -ofdump	
+	dmd src/dump.d $(LIB) -ofdump

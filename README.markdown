@@ -44,10 +44,10 @@ To run the examples.
 All's well that prints nothing!
 	
 ##UBJSON Dumper
-This simple utility will dump a .ubj file. It does not look at the extension, it passes it straight to the parser. 
+This simple utility will dump a file containing ubjson. Some sample files are located in src/resources. To print a dump :  
 
 	make dump
-	./dump resources/CouchDB4k.ubj
+	./dump src/resources/CouchDB4k.ubj
 
 ##DMD
 Tested with dmd 2.059. Does not have any other dependencies 
