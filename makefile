@@ -1,7 +1,7 @@
 LIB = src/ubjson.d
 
 main:
-	rdmd src/example.d $(LIB) -ofbin/example
+	rdmd src/example.d $(LIB) -ofexample
 
 #Run unittests
 test:
@@ -9,4 +9,4 @@ test:
 
 #Compile this utility to print ubj files	
 dump:
-	dmd src/dump.d $(LIB) -ofbin/dump	
+	dmd src/dump.d $(LIB) -ofdump
