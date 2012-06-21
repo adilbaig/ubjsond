@@ -8,9 +8,9 @@ To encode and decode, is simple :
 	ubjson = encode(int.max, "Hello World!", byte.max, true, null); // This template supports multiple arguments
 	Element[] elements = decode(ubjson); // And decode 
 	
-A more flexible way to create and manipulate ubjson objects is to use the elements template function
+A more flexible way to create and manipulate ubjson objects is to use the 'elements' template
 
-	Element[] elements = elements("Hello, "World!"); //2 string elements 
+	Element[] elms = elements("Hello, "World!", int.max); //2 string and an 'int' element 
 
 Create an array of strings
 	
@@ -27,21 +27,19 @@ Create objects
 	writeln(person); //{Name:"Adil", "Age":29, Score:99.15, Skills:["D", "Python", "Javascript", "C"]}
 	
 	//What's my name?
-	Element name = candidates["Name"];
+	Element name = person["Name"];
     writeln("Name : ", name); // "Name : Adil"
 	
-Append an object's attribute	
+Modify an object's attribute	
 
-	candidates["Name"] = "Batman"; // Assign any value that can be converted to an Element
-	writeln("Name : ", candidates["Name"]); // "Name : Batman"
+	person["Name"] = "Batman"; // Assign any value that can be converted to an Element. Doesn't have to be a string
+	writeln("Name : ", person["Name"]); // "Name : Batman"
 
 And convert your Element to ubjson 
 	
-	immutable(ubyte)[] ubjson = element.bytes(); //And finally, convert it to ubjson format 
+	immutable(ubyte)[] ubjson = person.bytes(); //And finally, convert it to ubjson format 
 	
-See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples.
-
-To run the examples.
+See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples. To run the examples :
 
 	make main
 
