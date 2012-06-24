@@ -680,6 +680,17 @@ unittest
     assert(e.bytes == objectElement("Name", "Adil Baig").bytes);
     e.remove("Name");
     assert(e.length == 0); 
+
+    //Test templated assignment for objects    
+    e["Name"] = "Batman";
+    e["Age"] = 35;
+    e["Score"] = 3900.6598;
+    e["isCool"] = true;
+    writeln(e["Score"].value!float(), e["Score"].toString());
+    assert(e["Name"].value!string() == "Batman");
+    assert(e["Age"].value!byte() == 35);
+    assert(e["Score"].toString() == "3900.6598");
+    assert(e["isCool"].value!bool() == true);
     
     e = Element(Type.ObjectLarge, 256);
     for(uint i = 0; i < 256; i++)
