@@ -60,4 +60,6 @@ Tested with dmd 2.059. Does not have any other dependencies
 ##Contributions
 I'd be happy to accomodate any patches, documentation or plain better code. To contribute simply fork this repository and send a pull request. Thanks!
 
-Adil Baig<br />[adilbaig.posterous.com](http://adilbaig.posterous.com)
+Adil Baig
+<br />Blog : [adilbaig.posterous.com](http://adilbaig.posterous.com)
+<br />Twitter : [@aidezigns](http://twitter.com/aidezigns)
