@@ -674,6 +674,7 @@ unittest
     e.remove(0); //Remove an element that does exist and ..
     assert(e.length == 1); // .. it's updated
 
+    //Manually assemble an object
     e = Element(Type.ObjectSmall, 1);
     e.array ~= elements("Name");
     e.array ~= elements("Adil Baig");
