@@ -272,6 +272,24 @@ struct Element {
         length = cast(uint)array.length;
     }
     
+    //For arrays and objects
+    void opOpAssign(string op)(Element[] elements)
+    {
+        assert(isArray() || isObject());
+        
+        static if (op == "~")
+        { 
+            array ~= elements;
+            
+            if(isArray())
+                length = cast(uint)array.length;
+            else
+                length = cast(uint)array.length / 2;
+        }
+        else 
+            static assert(0, "Operator "~op~" not implemented");
+    }
+    
     //For arrays
     Element[] opSlice(int start, int end)
     {
@@ -673,6 +691,9 @@ unittest
     assert(e.length == 2); //.. the length doesn't change
     e.remove(0); //Remove an element that does exist and ..
     assert(e.length == 1); // .. it's updated
+
+    e ~= elements("Blah", "Blah"); //Append elements to an array
+    assert(e.length == 3);
 
     //Manually assemble an object
     e = Element(Type.ObjectSmall, 1);
