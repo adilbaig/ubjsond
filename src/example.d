@@ -68,7 +68,7 @@ void main(string[] args)
     writeln("Name : ", candidates["Awesome"][0]["Name"]);
     
     //See the JSON
-    writeln("JSON : ", candidates);
+    writeln("JSON : ", candidates); //candidates.toString()
     
     //As expected, calling 'bytes' gets UBJSON for the entire object
     ubjson = candidates.bytes();
