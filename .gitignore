@@ -1,0 +1,4 @@
+.dub/
+*.o
+dump
+example

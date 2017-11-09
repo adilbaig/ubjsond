@@ -85,9 +85,9 @@ Modify an object's attribute
 	writeln("Name : ", person["Name"]); // "Name : Batman"
 
 ### More examples
-See [example.d](https://github.com/adilbaig/ubjsond/blob/master/src/example.d) for more detailed samples. To run the examples :
+See [example.d](https://github.com/adilbaig/ubjsond/blob/master/examples/example.d) for more detailed samples. To run the examples :
 
-	make main
+	dub run -c example
 
 ## Running Unit Tests
 	make test
@@ -97,8 +97,8 @@ All's well that prints nothing!
 ## UBJSON Dump Utility
 This simple utility will dump a file containing ubjson. Some sample files are located in src/resources. To print a dump :
 
-	make dump
-	./dump src/resources/CouchDB4k.ubj
+	dub build -c dump
+	./dump examples/resources/CouchDB4k.ubj
 
 ## What's missing
 Streaming support. However, Draft 9 introduces changes that make streaming a natural part of the protocol. Hence streaming will not be supported until Draft 9 is out.
