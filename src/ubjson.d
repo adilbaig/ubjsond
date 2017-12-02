@@ -249,11 +249,12 @@ struct Element {
     T opCast(T)() { return value!T; }
 
     //For arrays
-    ulong opDollar() //Not implemented by D compiler yet
+    uint opDollar()
     {
         assert(isArray(),"Not an array");
 
-        return array.length;
+        // Element has uint length; so
+        return cast(uint)array.length;
     }
 
     //For arrays
@@ -687,6 +688,9 @@ unittest
     assert(e.bytes == arrayElement(byte.max, int.max).bytes);
     assert(e.bytes.length == 2 + 2 + 5); //2 for array, 2 for byte and 5 for int
     assert(e[0 .. 2] == elements(byte.max,int.max)); //Comparing arrays of Elements
+
+    assert(e[$-1].bytes == toElement(int.max).bytes);
+    assert(e[0 .. $] == elements(byte.max,int.max)); //Comparing arrays of Elements
 
     e.remove(5); //Remove an element that doesn't exist and ..
     assert(e.length == 2); //.. the length doesn't change
