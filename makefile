@@ -1,12 +1,13 @@
-LIB = src/ubjson.d
+LIB = source/ubjson.d
 
 main:
-	rdmd src/example.d $(LIB) -ofexample
+	dmd examples/example.d $(LIB) -ofexample
+	./example
 
 #Run unittests
 test:
 	rdmd --main -unittest $(LIB)
 
-#Compile this utility to print ubj files	
+#Compile this utility to print ubj files
 dump:
-	dmd src/dump.d $(LIB) -ofdump
+	dmd examples/dump.d $(LIB) -ofdump

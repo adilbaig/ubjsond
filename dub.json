@@ -1,0 +1,25 @@
+{
+	"name": "ubjsond",
+	"description": "Universal Binary JSON (UBJSON) for D",
+	"homepage": "https://github.com/adilbaig/ubjsond",
+	"copyright": "Copyright © 2012, Adil Baig",
+	"authors": ["Adil Baig"],
+	"configurations": [
+		{
+			"name": "default",
+			"targetType": "sourceLibrary"
+		},
+		{
+			"name": "dump",
+			"mainSourceFile" : "examples/dump.d",
+			"targetName": "dump",
+			"targetType": "executable"
+		},
+		{
+			"name": "example",
+			"mainSourceFile" : "examples/example.d",
+			"targetName": "example",
+			"targetType": "executable"
+		}
+	]
+}
