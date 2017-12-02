@@ -11,20 +11,23 @@
     {
       "name": "example",
       "targetName": "example",
+      "targetPath": "out",
       "targetType": "executable",
       "excludedSourceFiles": ["src/dump.d"]
     },
     {
       "name": "library",
       "targetName": "ubjsond",
+      "targetPath": "out",
       "targetType": "library",
       "excludedSourceFiles": ["src/example.d", "src/dump.d"]
     },
     {
       "name": "dump-utility",
       "targetName": "ubjsond-dump",
+      "targetPath": "out",
       "targetType": "executable",
-      "excludedSourceFiles": ["src/dump.d"]
-    },
+      "excludedSourceFiles": ["src/example.d"]
+    }
   ]
 }
