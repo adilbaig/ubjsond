@@ -1,0 +1,30 @@
+{
+	"name": "ubjsond",
+	"authors": [
+    "Adil Baig",
+		"Bjorn Roberg"
+	],
+	"description": "A Universal Binary JSON de/serialization library.",
+	"copyright": "Copyright © 2017, ubjsond contributors",
+	"license": "?",
+  "configurations": [
+    {
+      "name": "example",
+      "targetName": "example",
+      "targetType": "executable",
+      "excludedSourceFiles": ["src/dump.d"]
+    },
+    {
+      "name": "library",
+      "targetName": "ubjsond",
+      "targetType": "library",
+      "excludedSourceFiles": ["src/example.d", "src/dump.d"]
+    },
+    {
+      "name": "dump-utility",
+      "targetName": "ubjsond-dump",
+      "targetType": "executable",
+      "excludedSourceFiles": ["src/dump.d"]
+    },
+  ]
+}
